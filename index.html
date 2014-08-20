@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<title>Platter - Light-touch dependency injection for PHP 5.3+</title>
+		<style>
+			body {
+				font: 1em / 1.5 Tahoma, Verdana, Arial, sans-serif;
+				margin: 3em;
+				color: #666;
+				background: #eee;
+			}
+			h1 {
+				text-align: center;
+				color: #222;
+			}
+			h2 {
+				text-align: center;
+				color: #222;
+			}
+			a[href] {
+				color: #f60;
+				border-bottom: 1px solid rgba(255, 102, 0, 0);
+				transition: border 650ms linear;
+				text-decoration: none;
+			}
+			a[href]:hover, a[href]:focus {
+				border-bottom: 1px solid rgba(255, 102, 0, 1);
+			}
+			.strap {
+				text-align: center;
+				font-style: italic;
+			}
+			.banner {
+				background: #222;
+				margin: 3em -3em;
+				text-align: center;
+				color: #fff;
+				padding: 3em;
+			}
+			.button {
+				display: inline-block;
+				background: #f60;
+				padding: 1em;
+				margin: 1em 0.5em;
+				color: #fff;
+				text-transform: uppercase;
+				font-family: Helvetica, Arial, sans-serif;
+				border-radius: 2px;
+			}
+			.button[href], .button[href]:hover, .button[href]:focus {
+				color: inherit;
+				border: 0;
+			}
+			.status[href], .status[href]:hover, .status[href]:focus {
+				display: inline-block;
+				border: 0;
+				margin: 1em;
+			}
+			pre {
+				background: #ddd;
+				color: #666;
+				padding: 2em;
+				margin: 0 -2em;
+				overflow-x: auto;
+			}
+			code {
+				font-size: 1.25em;
+				padding: 0.25em;
+				background: #ddd;
+				border-radius: 2px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Platter</h1>
+		<p class="strap">Light-touch dependency injection for PHP 5.3+</p>
+
+		<div class="banner">
+			<a class="button" href="https://github.com/stuartwakefield/platter" target="_blank">GitHub</a>
+			<a class="button" href="https://travis-ci.org/stuartwakefield/platter" target="_blank">Travis CI</a>
+
+			<p>Dependency injection provides a mechanism to build loosely coupled systems.</p>
+
+			<a class="status" href="https://travis-ci.org/stuartwakefield/platter"><img src="https://travis-ci.org/stuartwakefield/platter.svg"/></a>
+		</div>
+
+		<h2>Contents</h2>
+		<ul>
+			<li><a href="#GettingStarted">Getting started</a></li>
+			<li>
+				<a href="#APIDocs">API docs</a>
+				<ul>
+					<li><a href="#APIDocs:Platter">Platter</a></li>
+					<li><a href="#APIDocs:Platter:Builder">Platter\Builder</a></li>
+					<li><a href="#APIDocs:Platter:Builder">Platter\Definition\Singleton</a></li>
+				</ul>
+			</li>
+		</ul>
+
+		<h2 id="GettingStarted">Getting started</h2>
+		<p>To get started we recommend you use <a href="http://getcomposer.org">Composer</a>. In your composer.json file, add Platter as a dependency:</p>
+
+<pre>
+{
+    "require": {
+        "stuartwakefield/platter": "~0.1"
+    }
+}
+</pre>
+
+		<p>Run the install sub command for Composer to install Platter.</p>
+
+		<p>Add definitions to a Platter instance, while we would recommend to pass everything through Platter so that you only need to call get once, feel free to use Platter in a way that best suits your application.</p>
+
+<pre>
+$container = new Platter(array(
+    'Application' => function($container) {
+        $app = new Application();
+        $app->controller(
+            'record',
+            $container->get('RecordController')
+        );
+        $app->routes(
+            $container->get('routes')
+        );
+        return $app;
+    },
+    'routes' => array(
+        '/' => 'record:list',
+        '/new' => 'record:new',
+        '/new/save' => 'record:saveNew',
+        '/{id}' => 'record:view',
+        '/{id}/delete' => 'record:delete',
+        '/{id}/save' => 'record:save'
+    ),
+    'RecordController' => function($container) {
+        return new RecordContainer(
+            $container->get('RecordRepository'),
+            $container->get('RecordView')
+        );
+    },
+    'RecordRepository' => function($container) {
+        return new RecordRepository(
+            $container->get('PDO')
+        );
+    },
+    'RecordView' => function($container) {
+        return new RecordView()
+    },
+    'PDO' => function($container) {
+        $cfg = $container->get('config');
+        return new PDO(
+            $container->get('dsn'),
+            $cfg->dbuser,
+            $cfg->dbpass
+        );
+    },
+    'dsn' => function($container) {
+        $cfg = $container->get('config');
+        return "mysql:" .
+            "dbname={$cfg->dbname};" .
+            "host={$cfg->dbhost}";
+    },
+    'config' => (object) array(
+        'dbname' => 'mydb',
+        'dbhost' => '10.1.2.3',
+        'dbuser' => 'mysuperapp',
+        'dbpass' => '9H60ybPO5E'
+    )
+));
+
+$app = $container->get('Application');
+$app->run();
+</pre>
+
+		<h1 id="APIDocs">API docs</h1>
+
+		<h2 id="APIDocs:Platter">Platter</h2>
+
+		<h3 id="APIDocs:Platter:__construct">new Platter($defs, $parent)</h3>
+
+		<h3 id="APIDocs:Platter:get">$platter->get($name)</h3>
+
+		<h3 id="APIDocs:Platter:available">$platter->available()</h3>
+
+		<h3 id="APIDocs:Platter:defined">$platter->defined()</h3>
+
+		<h2 id="APIDocs:Platter:Builder">Platter\Builder</h2>
+
+		<h3 id="APIDocs:Platter:Builder:__construct">new Platter\Builder([$defs][, $parent])</h3>
+
+		<p>Creates a new Builder instance which can be used as an alternate method to create <a href="#APIDocs:Platter">Platter</a> instances through a friendly builder interface.</p>
+
+		<p>Parameters:</p>
+		<dl>
+			<dt><code>$defs</code></dt>
+			<dd>An (optional) array of definitions.</dd>
+			<dt><code>$parent</code></dt>
+			<dd>An (optional) parent <a href="#APIDocs:Platter">Platter</a> instance.</dd>
+		</dl>
+
+		<p>Example:</p>
+
+<pre>
+$builder = new Platter\Builder();
+$container = $builder
+    ->connect($parentContainer)
+    ->define('SalaryView', function($container) {
+        return new SalaryView()
+    })
+    ->define('SalaryController', function($container) {
+        return new SalaryController($container->get('Store'), $container->get('SalaryView'))
+    })
+    ->build();
+</pre>
+
+		<h3 id="APIDocs:Platter:Builder:define">$builder->define($name, $def)</h3>
+		<p>Creates a definition where <code>$name</code> is a string representing the name of the item and <code>$def</code> is a mixed type that defines what will be returned when collected through the <a href="#APIDocs:Platter:get">get</a> method. If <code>$def</code> is callable, the return value after calling the callable will be returned.</p>
+
+		<h3 id="APIDocs:Platter:Builder:forget">$builder->forget($name)</h3>
+
+		<h3 id="APIDocs:Platter:Builder:connect">$builder->connect($parent)</h3>
+
+		<h3 id="APIDocs:Platter:Builder:disconnect">$builder->disconnect()</h3>
+
+		<h3 id="APIDocs:Platter:Builder:build">$builder->build()</h3>
+		<p>Returns an instance of <a href="#APIDocs:Platter">Platter</a> initialized with the values defined through the builder</p>
+
+		<h2 id="APIDocs:Platter:Definition:Singleton">Platter\Definition\Singleton</h2>
+
+		<h3 id="APIDocs:Platter:Definition:Singleton:__construct">new Platter\Definition\Singleton($def)</h3>
+		<p>Decorates a definition provided as <code>$def</code> so that the same object instance will be provided each time it is called. This enables a single object to be shared across the entire application.</p>
+
+		<dl>
+			<dt><code>$def</code></dt>
+			<dd>A definition of mixed type.</dd>
+		</dl>
+
+<pre>
+$container = new Platter(array(
+    'Counter' => new Platter\Definition\Singleton(function($container) {
+        return new Counter()
+    })
+));
+
+$a = $container->get('Counter');
+echo $a->count(); // 0
+$a->increment();
+echo $a->count(); // 1
+
+$b = $container->get('Counter');
+echo $b->count(); // 1
+</pre>
+
+	</body>
+</html>
