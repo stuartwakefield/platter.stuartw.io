@@ -29,7 +29,7 @@ a[href]:hover, a[href]:focus {
 	background: #222;
 	margin: 3em -3em;
 	text-align: center;
-	color: #fff;
+	color: #999;
 	padding: 3em;
 }
 .button {
@@ -43,8 +43,9 @@ a[href]:hover, a[href]:focus {
 	border-radius: 2px;
 }
 .button[href], .button[href]:hover, .button[href]:focus {
-	color: inherit;
+	color: #fff;
 	border: 0;
+	font-weight: bold;
 }
 .status[href], .status[href]:hover, .status[href]:focus {
 	display: inline-block;
