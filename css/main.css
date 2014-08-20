@@ -3,6 +3,7 @@ body {
 	margin: 3em;
 	color: #666;
 	background: #eee;
+	word-wrap: break-word;
 }
 h1 {
 	text-align: center;
@@ -57,7 +58,6 @@ pre {
 	color: #666;
 	padding: 2em;
 	margin: 0 -2em;
-	overflow-x: auto;
 }
 code {
 	font-size: 1.25em;
